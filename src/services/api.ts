@@ -503,7 +503,7 @@ class ApiService {
           if (errJson?.message) message = errJson.message;
 
           // Check for invalid token and redirect
-          if (message === "Invalid token.") {
+          if (response.status === 401 || message === "Invalid token." || message === "Access denied. No token provided.") {
             console.log('🔥 API Service: Invalid token detected (4xx). Redirecting to auth...');
             localStorage.removeItem('token');
             localStorage.removeItem('user');
@@ -521,6 +521,15 @@ class ApiService {
             // Ignore if we can't get text either
           }
         }
+        
+        if (response.status === 401 || message === "Invalid token." || message === "Access denied. No token provided.") {
+          console.log('🔥 API Service: Invalid token detected (4xx). Redirecting to auth...');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          window.location.href = '/auth';
+          throw new Error("Session expired. Redirecting to login...");
+        }
+
         throw new Error(message);
       }
 
@@ -539,7 +548,7 @@ class ApiService {
 
       // Check for invalid token in success response (if backend returns 200 for this error)
       // The user specified: {success: false, message: "Invalid token."}
-      if (result && result.message === "Invalid token.") {
+      if (result && (result.message === "Invalid token." || result.message === "Access denied. No token provided.")) {
         console.log('🔥 API Service: Invalid token detected (200 OK). Redirecting to auth...');
         localStorage.removeItem('token');
         localStorage.removeItem('user');
